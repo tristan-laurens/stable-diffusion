@@ -9,7 +9,6 @@ from einops import rearrange
 from torchvision.utils import make_grid
 import time
 from pytorch_lightning import seed_everything
-from torch import autocast
 from contextlib import contextmanager, nullcontext
 
 from ldm.util import instantiate_from_config
@@ -226,9 +225,8 @@ def main():
     if opt.fixed_code:
         start_code = torch.randn([opt.n_samples, opt.C, opt.H // opt.f, opt.W // opt.f], device=device)
 
-    precision_scope = autocast if opt.precision=="autocast" else nullcontext
     with torch.no_grad():
-        with precision_scope("cuda"):
+        with torch.cuda.amp.autocast(True):
             with model.ema_scope():
                 tic = time.time()
                 all_samples = list()
@@ -283,3 +281,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
